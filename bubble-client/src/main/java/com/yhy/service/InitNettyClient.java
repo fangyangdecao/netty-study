@@ -10,6 +10,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +48,8 @@ public class InitNettyClient {
 
                     }
                 });
-        ChannelFuture future = connect(bootstrap, "127.0.0.1", 8888, MAX_RETRY);
+
+        ChannelFuture future = connect(bootstrap, "192.168.146.137", 7777, MAX_RETRY);
         if (future.isSuccess()) {
             log.info("启动 cim client 成功");
         }
