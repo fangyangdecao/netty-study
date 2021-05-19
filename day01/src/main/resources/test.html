@@ -1,0 +1,84 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Web Socket Test</title>
+</head>
+<body>
+<script type="text/javascript">
+    var socket;
+    if (!window.WebSocket) {
+        window.WebSocket = window.MozWebSocket;
+    }
+    if (window.WebSocket) {
+        // 随机数
+        var random = Math.floor(Math.random()*(10000 - 10 +1) + 10)
+        socket = new WebSocket("ws://127.0.0.1:8000/websocket?userId=" + random);
+        socket.onmessage = function(event) {
+            var ta = document.getElementById('responseText');
+            ta.value = ta.value + '\n' + event.data
+            //heartCheck.reset()
+        };
+        socket.onopen = function(event) {
+            var ta = document.getElementById('responseText');
+            ta.value = "Web Socket opened!";
+            //heartCheck.start()
+        };
+        socket.onclose = function(event) {
+            var ta = document.getElementById('responseText');
+            ta.value = ta.value + "Web Socket closed";
+        };
+
+    } else {
+        alert("Your browser does not support Web Socket.");
+    }
+
+    //心跳
+//https://www.cnblogs.com/c2g5201314/p/12304425.html
+
+    //https://blog.csdn.net/linuu/article/details/51509847
+    function send(message) {
+        if (!window.WebSocket) { return; }
+        if (socket.readyState == WebSocket.OPEN) {
+            socket.send(message);
+        } else {
+            alert("The socket is not open.");
+        }
+    }
+
+
+    //心跳检测  .所谓的心跳检测，就是隔一段时间向服务器仅限一次数据访问，因为长时间不使用会导致ws自动断开，
+    // 一般是间隔90秒内无操作会自动断开，因此，在间隔时间内进行一次数据访问，以防止ws断开即可，
+    //这里选择30秒，倒计时30秒内无操作则进行一次访问，有操作则重置计时器
+    //
+    //封装为键值对的形式，成为js对象，与json很相似
+    var heartCheck={
+             timeout: 3000,//30秒
+             timeoutObj: null,
+             reset: function(){//接收成功一次推送，就将心跳检测的倒计时重置为30秒
+                 clearTimeout(this.timeoutObj);//重置倒计时
+                 this.start();
+             },
+        start: function(){//启动心跳检测机制，设置倒计时30秒一次
+                this.timeoutObj = setTimeout(function(){
+                   var message = {
+                           "type": "t10010",
+                           "service":"运行心跳业务一次 =="+ new Date()
+                   };
+                   // JSON.stringify()的作用是将 JavaScript 对象转换为 JSON 字符串
+                   //而JSON.parse()可以将JSON字符串转为一个对象。
+                   console.log("心跳一次");
+                    socket.send(JSON.stringify(message));//启动心跳
+               },this.timeout)
+             }
+         //onopen连接上，就开始start及时，如果在定时时间范围内，onmessage获取到了服务端消息，
+         // 就重置reset倒计时，距离上次从后端获取消息30秒后，执行心跳检测，看是不是断了。
+     };
+</script>
+<form onsubmit="return false;">
+    <input type="text" name="message" value="Hello, World!" />
+    <input type="button" value="Send Web Socket Data" onclick="send(this.form.message.value)" />
+    <h3>Output</h3>
+    <textarea id="responseText" style="width:500px;height:300px;"></textarea>
+</form>
+</body>
+</html>
